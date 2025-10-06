@@ -8,7 +8,7 @@ print("ECG DATA INPUT FORMATTER")
 print("="*60)
 
 # Load preprocessing objects
-preprocessing_files = glob.glob('/kaggle/input/random-forest/other/default/1/ecg_preprocessing_*.pkl')
+preprocessing_files = glob.glob('~/Desktop/ecg_preprocessing_*.pkl')
 if not preprocessing_files:
     print("❌ Error: Preprocessing files not found!")
     print("Please ensure the model training script has been run first.")
@@ -132,7 +132,7 @@ print("DEMONSTRATION")
 print("="*60)
 
 # Demo 1: From CSV
-csv_path = "/kaggle/input/ecg-of-cardiac-ailments-dataset/ECGCvdata.csv"
+csv_path = "~/Desktop/ECGCvdata.csv"
 X_test_formatted = format_from_csv_row(csv_path, row_index=908)
 print(f"\nFirst 5 features:")
 print(X_test_formatted.iloc[0, :5])
@@ -162,7 +162,7 @@ import joblib
 import glob
 
 # Find the most recent model file
-model_files = glob.glob('/kaggle/input/random-forest/other/default/1/ecg_random_forest_model_*.pkl')
+model_files = glob.glob('~/Desktop/ecg_random_forest_model_*.pkl')
 
 if not model_files:
     print("❌ Error: Model file not found!")
@@ -195,4 +195,5 @@ else:
     print(f"\nProbabilities for each class:")
     for class_name, prob in zip(label_encoder.classes_, probabilities):
         bar = '█' * int(prob * 50)
+
         print(f"  {class_name:20s} {prob:6.2%} {bar}")
