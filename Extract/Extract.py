@@ -23,10 +23,10 @@ warnings.filterwarnings('ignore')
 # ============================================================================
 
 # Dataset path (update this for your Raspberry Pi)
-DATASET_PATH = '/home/pi/Desktop/raspi_files/ecg_signal.csv'
+DATASET_PATH = '../input/ptb-xl-dataset-reformatted/train_signal.csv'
 
 # Signal selection
-SAMPLE_INDEX = 35  # Which ECG recording to analyze (change this number)
+SAMPLE_INDEX = 8  # Which ECG recording to analyze (change this number)
 SAMPLING_RATE = 100  # Hz - sampling frequency of the ECG signal
 GAIN = 1.0  # Signal gain for normalization
 
@@ -430,52 +430,74 @@ class ECGFeatureExtractor:
 # ============================================================================
 # UTILITY FUNCTIONS
 # ============================================================================
+# Extacts from dataset on kaggle instead of file in pi
+# def load_ecg_data(csv_path, sample_index, lead_column='lead_1'):
+#     """Load a single ECG signal from multi-sample CSV dataset"""
+#     print(f"Loading data from: {csv_path}")
+#     print(f"Loading only sample #{sample_index}...")
+    
+#     # Read CSV in chunks to find the specific sample
+#     train_signal = pd.read_csv(csv_path).iloc[:, :2]
+#     train_signal.columns = ['ecg_id', lead_column]
+    
+#     # Get unique ECG IDs
+#     unique_ids = train_signal['ecg_id'].unique()
+    
+#     if sample_index >= len(unique_ids):
+#         raise ValueError(f"Sample index {sample_index} out of range. Available: 0-{len(unique_ids)-1}")
+    
+#     # Get the specific ECG ID
+#     target_id = unique_ids[sample_index]
+    
+#     # Filter only the target signal
+#     signal_data = train_signal[train_signal['ecg_id'] == target_id][lead_column].tolist()
+    
+#     print(f"Loaded ECG ID: {target_id} with {len(signal_data)} samples")
+#     return signal_data, target_id
+
 
 def load_ecg_data(csv_path, sample_index, lead_column='lead_1'):
-    """Load a single ECG signal from multi-sample CSV dataset"""
+    """Load a single flattened ECG signal from CSV where each row is one ECG"""
     print(f"Loading data from: {csv_path}")
     print(f"Loading only sample #{sample_index}...")
-    
-    # Read CSV in chunks to find the specific sample
-    train_signal = pd.read_csv(csv_path).iloc[:, :2]
-    train_signal.columns = ['ecg_id', lead_column]
-    
-    # Get unique ECG IDs
-    unique_ids = train_signal['ecg_id'].unique()
-    
-    if sample_index >= len(unique_ids):
-        raise ValueError(f"Sample index {sample_index} out of range. Available: 0-{len(unique_ids)-1}")
-    
-    # Get the specific ECG ID
-    target_id = unique_ids[sample_index]
-    
-    # Filter only the target signal
-    signal_data = train_signal[train_signal['ecg_id'] == target_id][lead_column].tolist()
-    
+
+    # Read the entire CSV (each row = one ECG)
+    df = pd.read_csv(csv_path)
+
+    # Check sample_index
+    if sample_index >= len(df):
+        raise ValueError(f"Sample index {sample_index} out of range. Available: 0-{len(df)-1}")
+
+    # Extract the row for the target sample
+    row = df.iloc[sample_index]
+
+    # First column is ecg_id, rest are signal values
+    target_id = row.iloc[0]
+    signal_data = row.iloc[1:].tolist()  # all signal values
+
     print(f"Loaded ECG ID: {target_id} with {len(signal_data)} samples")
     return signal_data, target_id
 
-
-def load_single_ecg_csv(csv_path, column_name=None):
-    print(f"Loading single ECG signal from: {csv_path}")
+# def load_single_ecg_csv(csv_path, column_name=None):
+#     print(f"Loading single ECG signal from: {csv_path}")
     
-    # Read the CSV file
-    df = pd.read_csv(csv_path)
+#     # Read the CSV file
+#     df = pd.read_csv(csv_path)
     
-    # Get the signal data
-    if column_name is None:
-        # Use first column
-        signal_data = df.iloc[:, 0].tolist()
-        col_used = df.columns[0]
-    else:
-        # Use specified column
-        if column_name not in df.columns:
-            raise ValueError(f"Column '{column_name}' not found. Available: {df.columns.tolist()}")
-        signal_data = df[column_name].tolist()
-        col_used = column_name
+#     # Get the signal data
+#     if column_name is None:
+#         # Use first column
+#         signal_data = df.iloc[:, 0].tolist()
+#         col_used = df.columns[0]
+#     else:
+#         # Use specified column
+#         if column_name not in df.columns:
+#             raise ValueError(f"Column '{column_name}' not found. Available: {df.columns.tolist()}")
+#         signal_data = df[column_name].tolist()
+#         col_used = column_name
     
-    print(f"Loaded {len(signal_data)} samples from column '{col_used}'")
-    return signal_data
+#     print(f"Loaded {len(signal_data)} samples from column '{col_used}'")
+#     return signal_data
 
 
 def plot_ecg_signal(ecg_signal, sampling_rate, title="ECG Signal"):
