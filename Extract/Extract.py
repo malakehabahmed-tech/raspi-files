@@ -21,6 +21,9 @@ GAIN = 1.0
 
 LEAD_COLUMN = 'lead_1'
 
+# Output CSV path
+OUTPUT_CSV_PATH = '/home/yys/Desktop/raspi-files/Extract/ecg_features_output.csv'
+
 
 class ECGFeatureExtractor:
     def __init__(self, sampling_rate=100):
@@ -266,7 +269,7 @@ class ECGFeatureExtractor:
         return features
 
     def _calculate_segment_lengths(self, waves, ecg_signal):
-        """Calculate segment lengths between wave points"""
+        """Calculate segment lengths between wave points (in SECONDS)"""
         segments = {}
         all_segments = {
             'Pseg': [], 'PQseg': [], 'QRSseg': [], 'QRseg': [], 'QTseg': [],
@@ -275,43 +278,43 @@ class ECGFeatureExtractor:
 
         for beat_idx, wave_dict in waves.items():
             if 'P_on' in wave_dict and 'P' in wave_dict:
-                p_len = abs(wave_dict['P'] - wave_dict['P_on']) / self.fs * 1000
+                p_len = abs(wave_dict['P'] - wave_dict['P_on']) / self.fs
                 all_segments['Pseg'].append(p_len)
 
             if 'P' in wave_dict and 'Q' in wave_dict:
-                pq_len = abs(wave_dict['Q'] - wave_dict['P']) / self.fs * 1000
+                pq_len = abs(wave_dict['Q'] - wave_dict['P']) / self.fs
                 all_segments['PQseg'].append(pq_len)
 
             if all(k in wave_dict for k in ['Q', 'S']):
-                qrs_len = abs(wave_dict['S'] - wave_dict['Q']) / self.fs * 1000
+                qrs_len = abs(wave_dict['S'] - wave_dict['Q']) / self.fs
                 all_segments['QRSseg'].append(qrs_len)
 
             if 'Q' in wave_dict and 'R' in wave_dict:
-                qr_len = abs(wave_dict['R'] - wave_dict['Q']) / self.fs * 1000
+                qr_len = abs(wave_dict['R'] - wave_dict['Q']) / self.fs
                 all_segments['QRseg'].append(qr_len)
 
             if 'Q' in wave_dict and 'T' in wave_dict:
-                qt_len = abs(wave_dict['T'] - wave_dict['Q']) / self.fs * 1000
+                qt_len = abs(wave_dict['T'] - wave_dict['Q']) / self.fs
                 all_segments['QTseg'].append(qt_len)
 
             if 'R' in wave_dict and 'S' in wave_dict:
-                rs_len = abs(wave_dict['S'] - wave_dict['R']) / self.fs * 1000
+                rs_len = abs(wave_dict['S'] - wave_dict['R']) / self.fs
                 all_segments['RSseg'].append(rs_len)
 
             if 'S' in wave_dict and 'T' in wave_dict:
-                st_len = abs(wave_dict['T'] - wave_dict['S']) / self.fs * 1000
+                st_len = abs(wave_dict['T'] - wave_dict['S']) / self.fs
                 all_segments['STseg'].append(st_len)
 
             if 'T' in wave_dict and 'T_off' in wave_dict:
-                t_len = abs(wave_dict['T_off'] - wave_dict['T']) / self.fs * 1000
+                t_len = abs(wave_dict['T_off'] - wave_dict['T']) / self.fs
                 all_segments['Tseg'].append(t_len)
 
             if 'P' in wave_dict and 'T' in wave_dict:
-                pt_len = abs(wave_dict['T'] - wave_dict['P']) / self.fs * 1000
+                pt_len = abs(wave_dict['T'] - wave_dict['P']) / self.fs
                 all_segments['PTseg'].append(pt_len)
 
             if 'P_on' in wave_dict and 'T_off' in wave_dict:
-                ecg_len = abs(wave_dict['T_off'] - wave_dict['P_on']) / self.fs * 1000
+                ecg_len = abs(wave_dict['T_off'] - wave_dict['P_on']) / self.fs
                 all_segments['ECGseg'].append(ecg_len)
 
         for seg_name, values in all_segments.items():
@@ -320,16 +323,16 @@ class ECGFeatureExtractor:
         return segments
 
     def _calculate_duration_features(self, waves):
-        """Calculate QR to QS and RS to QS durations"""
+        """Calculate QR to QS and RS to QS durations (in SECONDS)"""
         durations = {'QRtoQSdur': [], 'RStoQSdur': []}
 
         for beat_idx, wave_dict in waves.items():
             if all(k in wave_dict for k in ['Q', 'R', 'S']):
-                qr_dur = abs(wave_dict['R'] - wave_dict['Q']) / self.fs * 1000
-                qs_dur = abs(wave_dict['S'] - wave_dict['Q']) / self.fs * 1000
+                qr_dur = abs(wave_dict['R'] - wave_dict['Q']) / self.fs
+                qs_dur = abs(wave_dict['S'] - wave_dict['Q']) / self.fs
                 durations['QRtoQSdur'].append(qr_dur / qs_dur if qs_dur != 0 else 0)
 
-                rs_dur = abs(wave_dict['S'] - wave_dict['R']) / self.fs * 1000
+                rs_dur = abs(wave_dict['S'] - wave_dict['R']) / self.fs
                 durations['RStoQSdur'].append(rs_dur / qs_dur if qs_dur != 0 else 0)
 
         return {
@@ -419,6 +422,19 @@ def load_ecg_data(csv_path, sample_index, lead_column='lead_1'):
     return signal_data, target_id
 
 
+def save_features_to_csv(features, output_path, ecg_id=None):
+    """Save extracted features to CSV with features as columns"""
+    features_df = pd.DataFrame([features])
+    
+    if ecg_id is not None:
+        features_df.insert(0, 'ecg_id', ecg_id)
+    
+    features_df.to_csv(output_path, index=False)
+    print(f"\nFeatures saved to: {output_path}")
+    print(f"CSV shape: {features_df.shape}")
+    return features_df
+
+
 def process_ecg_dataset(ecg_data, sampling_rate=100, gain=1.0):
     """Process entire ECG dataset and extract features"""
     extractor = ECGFeatureExtractor(sampling_rate)
@@ -478,7 +494,9 @@ if __name__ == "__main__":
     for feature_name, value in features.items():
         print(f"{feature_name:<{max_name_length}} : {value:>12.4f}")
 
-    features_df = pd.DataFrame([features])
+    # Save features to CSV
+    features_df = save_features_to_csv(features, OUTPUT_CSV_PATH, ecg_id)
+    
     print("\n" + "=" * 70)
     print(f"Feature DataFrame shape : {features_df.shape}")
     print(f"Total features extracted: {len(features)}")
