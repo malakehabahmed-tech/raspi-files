@@ -10,7 +10,7 @@ print("ECG DATA INPUT FORMATTER")
 print("="*60)
 
 # Load preprocessing objects
-preprocessing_files = glob.glob('~/Desktop/ecg_preprocessing_*.pkl')
+preprocessing_files = glob.glob('/home/yys/Desktop/raspi-files/Random_forest/ecg_preprocessing_*.pkl')
 if not preprocessing_files:
     print("❌ Error: Preprocessing files not found!")
     print("Please ensure the model training script has been run first.")
@@ -163,7 +163,7 @@ import joblib
 import glob
 
 # Find the most recent model file
-model_files = glob.glob('~/Desktop/ecg_random_forest_model_*.pkl')
+model_files = glob.glob('/home/yys/Desktop/raspi-files/Random_forest/ecg_random_forest_model_*.pkl')
 
 if not model_files:
     print("❌ Error: Model file not found!")
@@ -198,4 +198,5 @@ else:
         bar = '█' * int(prob * 50)
 
         print(f"  {class_name:20s} {prob:6.2%} {bar}")
+
 
