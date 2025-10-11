@@ -14,6 +14,7 @@ warnings.filterwarnings('ignore')
 
 
 DATASET_PATH = '/home/yys/Desktop/raspi-files/Extract/ecg_signal_rows.csv'
+OUTPUT_CSV_PATH = '/home/yys/Desktop/raspi-files/Extract/ecg_features_output.csv'
 
 SAMPLE_INDEX = 8
 SAMPLING_RATE = 100
@@ -439,39 +440,30 @@ def load_ecg_data(csv_path, sample_index, lead_column='lead_1'):
     return signal_data, target_id
 
 
-def process_ecg_dataset(ecg_data, sampling_rate=100, gain=1.0):
-    """Process entire ECG dataset and extract features"""
-    extractor = ECGFeatureExtractor(sampling_rate)
-
-    if isinstance(ecg_data, pd.DataFrame):
-        features_list = []
-        for idx, row in ecg_data.iterrows():
-            if isinstance(row.iloc[0], (list, tuple, np.ndarray)):
-                signal = np.array(row.iloc[0])
-            else:
-                signal = row.values
-
-            features = extractor.extract_features(signal, gain)
-            features['sample_id'] = idx
-            features_list.append(features)
-
-        return pd.DataFrame(features_list)
-
-    elif isinstance(ecg_data, np.ndarray):
-        if ecg_data.ndim == 1:
-            features = extractor.extract_features(ecg_data, gain)
-            return pd.DataFrame([features])
-        else:
-            features_list = []
-            for i, signal in enumerate(ecg_data):
-                features = extractor.extract_features(signal, gain)
-                features['sample_id'] = i
-                features_list.append(features)
-
-            return pd.DataFrame(features_list)
-
-    else:
-        raise ValueError("ecg_data must be numpy array or pandas DataFrame")
+def save_features_to_csv(features, output_path):
+    """Save features to CSV in the exact format specified"""
+    # Define the exact column order
+    column_order = [
+        'hbpermin', 'Pseg', 'PQseg', 'QRSseg', 'QRseg', 'QTseg', 'RSseg', 'STseg',
+        'Tseg', 'PTseg', 'ECGseg', 'QRtoQSdur', 'RStoQSdur', 'RRmean', 'PPmean',
+        'PQdis', 'PonQdis', 'PRdis', 'PonRdis', 'PSdis', 'PonSdis', 'PTdis',
+        'PonTdis', 'PToffdis', 'QRdis', 'QSdis', 'QTdis', 'QToffdis', 'RSdis',
+        'RTdis', 'RToffdis', 'STdis', 'SToffdis', 'PonToffdis', 'PonPQang',
+        'PQRang', 'QRSang', 'RSTang', 'STToffang', 'RRTot', 'NNTot', 'SDRR',
+        'IBIM', 'IBISD', 'SDSD', 'RMSSD', 'QRSarea', 'QRSperi', 'PQslope',
+        'QRslope', 'RSslope', 'STslope', 'NN50', 'pNN50'
+    ]
+    
+    # Create DataFrame with single row
+    features_df = pd.DataFrame([features])
+    
+    # Reorder columns to match the specified format
+    features_df = features_df[column_order]
+    
+    # Save to CSV with tab separator
+    features_df.to_csv(output_path, sep='\t', index=False)
+    print(f"\nFeatures saved to: {output_path}")
+    print(f"CSV format: Tab-separated with headers")
 
 
 if __name__ == "__main__":
@@ -500,8 +492,9 @@ if __name__ == "__main__":
         unit = get_feature_unit(feature_name)
         print(f"{feature_name:<{max_name_length}} : {value:>12.4f} {unit:>{max_unit_length}}")
 
-    features_df = pd.DataFrame([features])
+    # Save features to CSV
+    save_features_to_csv(features, OUTPUT_CSV_PATH)
+
     print("\n" + "=" * 70)
-    print(f"Feature DataFrame shape : {features_df.shape}")
     print(f"Total features extracted: {len(features)}")
     print("=" * 70)
