@@ -227,12 +227,12 @@ class ECGFeatureExtractor:
         segment_features = self._calculate_segment_lengths(waves, normalized_signal)
         features.update(segment_features)
 
-        features['RRmean'] = np.mean(rr_intervals) / 1000 if len(rr_intervals) > 0 else 0
+        features['RRmean'] = np.mean(rr_intervals) if len(rr_intervals) > 0 else 0
 
         p_peaks = [waves[i]['P'] for i in waves if 'P' in waves[i]]
         if len(p_peaks) > 1:
             pp_intervals = np.diff(p_peaks) / self.fs * 1000
-            features['PPmean'] = np.mean(pp_intervals) / 1000
+            features['PPmean'] = np.mean(pp_intervals)
         else:
             features['PPmean'] = 0
 
@@ -276,43 +276,43 @@ class ECGFeatureExtractor:
 
         for beat_idx, wave_dict in waves.items():
             if 'P_on' in wave_dict and 'P' in wave_dict:
-                p_len = abs(wave_dict['P'] - wave_dict['P_on']) / self.fs
+                p_len = abs(wave_dict['P'] - wave_dict['P_on']) / self.fs * 1000
                 all_segments['Pseg'].append(p_len)
 
             if 'P' in wave_dict and 'Q' in wave_dict:
-                pq_len = abs(wave_dict['Q'] - wave_dict['P']) / self.fs
+                pq_len = abs(wave_dict['Q'] - wave_dict['P']) / self.fs * 1000
                 all_segments['PQseg'].append(pq_len)
 
             if all(k in wave_dict for k in ['Q', 'S']):
-                qrs_len = abs(wave_dict['S'] - wave_dict['Q']) / self.fs
+                qrs_len = abs(wave_dict['S'] - wave_dict['Q']) / self.fs * 1000
                 all_segments['QRSseg'].append(qrs_len)
 
             if 'Q' in wave_dict and 'R' in wave_dict:
-                qr_len = abs(wave_dict['R'] - wave_dict['Q']) / self.fs
+                qr_len = abs(wave_dict['R'] - wave_dict['Q']) / self.fs * 1000
                 all_segments['QRseg'].append(qr_len)
 
             if 'Q' in wave_dict and 'T' in wave_dict:
-                qt_len = abs(wave_dict['T'] - wave_dict['Q']) / self.fs
+                qt_len = abs(wave_dict['T'] - wave_dict['Q']) / self.fs * 1000
                 all_segments['QTseg'].append(qt_len)
 
             if 'R' in wave_dict and 'S' in wave_dict:
-                rs_len = abs(wave_dict['S'] - wave_dict['R']) / self.fs
+                rs_len = abs(wave_dict['S'] - wave_dict['R']) / self.fs * 1000
                 all_segments['RSseg'].append(rs_len)
 
             if 'S' in wave_dict and 'T' in wave_dict:
-                st_len = abs(wave_dict['T'] - wave_dict['S']) / self.fs
+                st_len = abs(wave_dict['T'] - wave_dict['S']) / self.fs * 1000
                 all_segments['STseg'].append(st_len)
 
             if 'T' in wave_dict and 'T_off' in wave_dict:
-                t_len = abs(wave_dict['T_off'] - wave_dict['T']) / self.fs
+                t_len = abs(wave_dict['T_off'] - wave_dict['T']) / self.fs * 1000
                 all_segments['Tseg'].append(t_len)
 
             if 'P' in wave_dict and 'T' in wave_dict:
-                pt_len = abs(wave_dict['T'] - wave_dict['P']) / self.fs
+                pt_len = abs(wave_dict['T'] - wave_dict['P']) / self.fs * 1000
                 all_segments['PTseg'].append(pt_len)
 
             if 'P_on' in wave_dict and 'T_off' in wave_dict:
-                ecg_len = abs(wave_dict['T_off'] - wave_dict['P_on']) / self.fs
+                ecg_len = abs(wave_dict['T_off'] - wave_dict['P_on']) / self.fs * 1000
                 all_segments['ECGseg'].append(ecg_len)
 
         for seg_name, values in all_segments.items():
@@ -326,11 +326,11 @@ class ECGFeatureExtractor:
 
         for beat_idx, wave_dict in waves.items():
             if all(k in wave_dict for k in ['Q', 'R', 'S']):
-                qr_dur = abs(wave_dict['R'] - wave_dict['Q']) / self.fs
-                qs_dur = abs(wave_dict['S'] - wave_dict['Q']) / self.fs
+                qr_dur = abs(wave_dict['R'] - wave_dict['Q']) / self.fs * 1000
+                qs_dur = abs(wave_dict['S'] - wave_dict['Q']) / self.fs * 1000
                 durations['QRtoQSdur'].append(qr_dur / qs_dur if qs_dur != 0 else 0)
 
-                rs_dur = abs(wave_dict['S'] - wave_dict['R']) / self.fs
+                rs_dur = abs(wave_dict['S'] - wave_dict['R']) / self.fs * 1000
                 durations['RStoQSdur'].append(rs_dur / qs_dur if qs_dur != 0 else 0)
 
         return {
@@ -421,32 +421,46 @@ def load_ecg_data(csv_path, sample_index, lead_column='lead_1'):
 
 
 def save_features_to_csv(features, output_path):
-    """Save features to CSV in the exact format specified"""
-    # Create DataFrame with single row - use whatever feature names are generated
+    """Save features to CSV file"""
     features_df = pd.DataFrame([features])
-    
-    # Save to CSV with tab separator
     features_df.to_csv(output_path, sep='\t', index=False)
     print(f"\nFeatures saved to: {output_path}")
     print(f"CSV format: Tab-separated with headers")
-    print(f"Columns saved: {len(features_df.columns)}")', 'PTdis',
-        'PonTdis', 'PToffdis', 'QRdis', 'QSdis', 'QTdis', 'QToffdis', 'RSdis',
-        'RTdis', 'RToffdis', 'STdis', 'SToffdis', 'PonToffdis', 'PonPQang',
-        'PQRang', 'QRSang', 'RSTang', 'STToffang', 'RRTot', 'NNTot', 'SDRR',
-        'IBIM', 'IBISD', 'SDSD', 'RMSSD', 'QRSarea', 'QRSperi', 'PQslope',
-        'QRslope', 'RSslope', 'STslope', 'NN50', 'pNN50'
-    ]
-    
-    # Create DataFrame with single row
-    features_df = pd.DataFrame([features])
-    
-    # Reorder columns to match the specified format
-    features_df = features_df[column_order]
-    
-    # Save to CSV with tab separator
-    features_df.to_csv(output_path, sep='\t', index=False)
-    print(f"\nFeatures saved to: {output_path}")
-    print(f"CSV format: Tab-separated with headers")
+
+
+def process_ecg_dataset(ecg_data, sampling_rate=100, gain=1.0):
+    """Process entire ECG dataset and extract features"""
+    extractor = ECGFeatureExtractor(sampling_rate)
+
+    if isinstance(ecg_data, pd.DataFrame):
+        features_list = []
+        for idx, row in ecg_data.iterrows():
+            if isinstance(row.iloc[0], (list, tuple, np.ndarray)):
+                signal = np.array(row.iloc[0])
+            else:
+                signal = row.values
+
+            features = extractor.extract_features(signal, gain)
+            features['sample_id'] = idx
+            features_list.append(features)
+
+        return pd.DataFrame(features_list)
+
+    elif isinstance(ecg_data, np.ndarray):
+        if ecg_data.ndim == 1:
+            features = extractor.extract_features(ecg_data, gain)
+            return pd.DataFrame([features])
+        else:
+            features_list = []
+            for i, signal in enumerate(ecg_data):
+                features = extractor.extract_features(signal, gain)
+                features['sample_id'] = i
+                features_list.append(features)
+
+            return pd.DataFrame(features_list)
+
+    else:
+        raise ValueError("ecg_data must be numpy array or pandas DataFrame")
 
 
 if __name__ == "__main__":
@@ -476,6 +490,8 @@ if __name__ == "__main__":
     # Save features to CSV
     save_features_to_csv(features, OUTPUT_CSV_PATH)
 
+    features_df = pd.DataFrame([features])
     print("\n" + "=" * 70)
+    print(f"Feature DataFrame shape : {features_df.shape}")
     print(f"Total features extracted: {len(features)}")
     print("=" * 70)
