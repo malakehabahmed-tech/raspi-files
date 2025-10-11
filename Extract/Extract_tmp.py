@@ -15,14 +15,14 @@ warnings.filterwarnings('ignore')
 
 DATASET_PATH = '/home/yys/Desktop/raspi-files/Extract/ecg_signal_rows.csv'
 
-SAMPLE_INDEX = 8
+SAMPLE_INDEX = 10
 SAMPLING_RATE = 100
 GAIN = 1.0
 
 LEAD_COLUMN = 'lead_1'
 
 # Output CSV path
-OUTPUT_CSV_PATH = '/home/yys/Desktop/raspi-files/Extract/ecg_features_output.csv'
+OUTPUT_CSV_PATH = '/home/yys/Desktop/raspi-files/Random_forest/ecg_features_output.csv'
 
 
 class ECGFeatureExtractor:
@@ -511,7 +511,7 @@ if __name__ == "__main__":
 
     # Save features to CSV
     features_df = save_features_to_csv(features, OUTPUT_CSV_PATH, record_id=1)  # 1, 2, ... for each record
-    
+
     print("\n" + "=" * 70)
     print(f"Feature DataFrame shape : {features_df.shape}")
     print(f"Total features extracted: {len(features)}")
