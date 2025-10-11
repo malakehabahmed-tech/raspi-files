@@ -422,14 +422,14 @@ def load_ecg_data(csv_path, sample_index, lead_column='lead_1'):
     return signal_data, target_id
 
 
-def save_features_to_csv(features, output_path, ecg_id=None):
-    """Save extracted features to CSV in correct order"""
-    if ecg_id is not None:
-        features['ecg_id'] = ecg_id
+def save_features_to_csv(features, output_path, record_id=None):
+    """Save extracted features to CSV in the specified format"""
+    if record_id is not None:
+        features['RECORD'] = record_id  # rename from ecg_id to RECORD
 
-    # enforce correct order
+    # exact column order you want
     column_order = [
-        'ecg_id', 'hbpermin', 'Pseg', 'PQseg', 'QRSseg', 'QRseg', 'QTseg', 'RSseg', 'STseg', 'Tseg',
+        'RECORD', 'hbpermin', 'Pseg', 'PQseg', 'QRSseg', 'QRseg', 'QTseg', 'RSseg', 'STseg', 'Tseg',
         'PTseg', 'ECGseg', 'QRtoQSdur', 'RStoQSdur', 'RRmean', 'PPmean', 'PQdis', 'PonQdis', 'PRdis',
         'PonRdis', 'PSdis', 'PonSdis', 'PTdis', 'PonTdis', 'PToffdis', 'QRdis', 'QSdis', 'QTdis',
         'QToffdis', 'RSdis', 'RTdis', 'RToffdis', 'STdis', 'SToffdis', 'PonToffdis', 'PonPQang',
@@ -443,10 +443,11 @@ def save_features_to_csv(features, output_path, ecg_id=None):
             features[col] = 0
 
     df = pd.DataFrame([features], columns=column_order)
-    df.to_csv(output_path, index=False)
+    df.to_csv(output_path, index=False, float_format='%.8f')
     print(f"\nFeatures saved to: {output_path}")
     print(f"CSV shape: {df.shape}")
     return df
+
 
 
 def process_ecg_dataset(ecg_data, sampling_rate=100, gain=1.0):
@@ -509,7 +510,7 @@ if __name__ == "__main__":
         print(f"{feature_name:<{max_name_length}} : {value:>12.4f}")
 
     # Save features to CSV
-    features_df = save_features_to_csv(features, OUTPUT_CSV_PATH, ecg_id)
+    features_df = save_features_to_csv(features, OUTPUT_CSV_PATH, record_id=1)  # 1, 2, ... for each record
     
     print("\n" + "=" * 70)
     print(f"Feature DataFrame shape : {features_df.shape}")
