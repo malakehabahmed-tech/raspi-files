@@ -134,7 +134,7 @@ print("DEMONSTRATION")
 print("="*60)
 
 # Demo 1: From CSV
-X_test_formatted = format_from_csv_row(csv_path, row_index=908)
+X_test_formatted = format_from_csv_row(csv_path, row_index=1)
 print(f"\nFirst 5 features:")
 print(X_test_formatted.iloc[0, :5])
 
@@ -198,5 +198,6 @@ else:
         bar = '█' * int(prob * 50)
 
         print(f"  {class_name:20s} {prob:6.2%} {bar}")
+
 
 
