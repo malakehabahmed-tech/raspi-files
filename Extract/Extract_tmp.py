@@ -423,16 +423,30 @@ def load_ecg_data(csv_path, sample_index, lead_column='lead_1'):
 
 
 def save_features_to_csv(features, output_path, ecg_id=None):
-    """Save extracted features to CSV with features as columns"""
-    features_df = pd.DataFrame([features])
-    
+    """Save extracted features to CSV in correct order"""
     if ecg_id is not None:
-        features_df.insert(0, 'ecg_id', ecg_id)
-    
-    features_df.to_csv(output_path, index=False)
+        features['ecg_id'] = ecg_id
+
+    # enforce correct order
+    column_order = [
+        'ecg_id', 'hbpermin', 'Pseg', 'PQseg', 'QRSseg', 'QRseg', 'QTseg', 'RSseg', 'STseg', 'Tseg',
+        'PTseg', 'ECGseg', 'QRtoQSdur', 'RStoQSdur', 'RRmean', 'PPmean', 'PQdis', 'PonQdis', 'PRdis',
+        'PonRdis', 'PSdis', 'PonSdis', 'PTdis', 'PonTdis', 'PToffdis', 'QRdis', 'QSdis', 'QTdis',
+        'QToffdis', 'RSdis', 'RTdis', 'RToffdis', 'STdis', 'SToffdis', 'PonToffdis', 'PonPQang',
+        'PQRang', 'QRSang', 'RSTang', 'STToffang', 'RRTot', 'NNTot', 'SDRR', 'IBIM', 'IBISD', 'SDSD',
+        'RMSSD', 'QRSarea', 'QRSperi', 'PQslope', 'QRslope', 'RSslope', 'STslope', 'NN50', 'pNN50'
+    ]
+
+    # fill missing columns with 0
+    for col in column_order:
+        if col not in features:
+            features[col] = 0
+
+    df = pd.DataFrame([features], columns=column_order)
+    df.to_csv(output_path, index=False)
     print(f"\nFeatures saved to: {output_path}")
-    print(f"CSV shape: {features_df.shape}")
-    return features_df
+    print(f"CSV shape: {df.shape}")
+    return df
 
 
 def process_ecg_dataset(ecg_data, sampling_rate=100, gain=1.0):
