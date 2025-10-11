@@ -401,26 +401,6 @@ class ECGFeatureExtractor:
         return {name: 0 for name in feature_names}
 
 
-def get_feature_unit(feature_name):
-    """Return the appropriate unit for each feature"""
-    unit_map = {
-        'hbpermin': 'bpm',
-        'Pseg': 'sec', 'PQseg': 'sec', 'QRSseg': 'sec', 'QRseg': 'sec', 
-        'QTseg': 'sec', 'RSseg': 'sec', 'STseg': 'sec', 'Tseg': 'sec', 
-        'PTseg': 'sec', 'ECGseg': 'sec',
-        'QRtoQSdur': 'sec', 'RStoQSdur': 'sec',
-        'RRmean': 'sec', 'PPmean': 'sec',
-        'PonPQang': 'degrees', 'PQRang': 'degrees', 'QRSang': 'degrees', 
-        'RSTang': 'degrees', 'STToffang': 'degrees',
-        'RRTot': 'count', 'NNTot': 'count',
-        'SDRR': 'ms',
-        'IBIM': 'ms', 'IBISD': 'ms', 'SDSD': 'ms', 'RMSSD': 'ms',
-        'PQslope': 'slope', 'QRslope': 'slope', 'RSslope': 'slope', 'STslope': 'slope',
-        'NN50': 'count', 'pNN50': '%'
-    }
-    return unit_map.get(feature_name, '')
-
-
 def load_ecg_data(csv_path, sample_index, lead_column='lead_1'):
     """Load a single flattened ECG signal from CSV where each row is one ECG"""
     print(f"Loading data from: {csv_path}")
@@ -442,33 +422,14 @@ def load_ecg_data(csv_path, sample_index, lead_column='lead_1'):
 
 def save_features_to_csv(features, output_path):
     """Save features to CSV in the exact format specified"""
-    # Define the exact column order
-    column_order = [
-        'hbpermin', 'Pseg', 'PQseg', 'QRSseg', 'QRseg', 'QTseg', 'RSseg', 'STseg',
-        'Tseg', 'PTseg', 'ECGseg', 'QRtoQSdur', 'RStoQSdur', 'RRmean', 'PPmean',
-        'PQdis', 'P_onQdis', 'PRdis', 'P_onRdis', 'PSdis', 'P_onSdis', 'PTdis',
-        'P_onTdis', 'PT_offdis', 'QRdis', 'QSdis', 'QTdis', 'QT_offdis', 'RSdis',
-        'RTdis', 'RT_offdis', 'STdis', 'ST_offdis', 'P_onT_offdis', 'P_onPQang',
-        'PQRang', 'QRSang', 'RSTang', 'STT_offang', 'RRTot', 'NNTot', 'SDRR',
-        'IBIM', 'IBISD', 'SDSD', 'RMSSD', 'QRSarea', 'QRSperi', 'PQslope',
-        'QRslope', 'RSslope', 'STslope', 'NN50', 'pNN50'
-    ]
-    
-    # Create DataFrame with single row
+    # Create DataFrame with single row - use whatever feature names are generated
     features_df = pd.DataFrame([features])
-    
-    # Add any missing columns with 0 values
-    for col in column_order:
-        if col not in features_df.columns:
-            features_df[col] = 0
-    
-    # Reorder columns to match the specified format
-    features_df = features_df[column_order]
     
     # Save to CSV with tab separator
     features_df.to_csv(output_path, sep='\t', index=False)
     print(f"\nFeatures saved to: {output_path}")
-    print(f"CSV format: Tab-separated with headers")', 'PTdis',
+    print(f"CSV format: Tab-separated with headers")
+    print(f"Columns saved: {len(features_df.columns)}")', 'PTdis',
         'PonTdis', 'PToffdis', 'QRdis', 'QSdis', 'QTdis', 'QToffdis', 'RSdis',
         'RTdis', 'RToffdis', 'STdis', 'SToffdis', 'PonToffdis', 'PonPQang',
         'PQRang', 'QRSang', 'RSTang', 'STToffang', 'RRTot', 'NNTot', 'SDRR',
