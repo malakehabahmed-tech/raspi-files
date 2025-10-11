@@ -3,7 +3,7 @@ import numpy as np
 import joblib
 import glob
 
-csv_path = "/home/yys/Desktop/raspi-files/Random_forest/ecg_features_output.csv"
+csv_path = "/home/yys/Desktop/raspi-files/Random_forest/ECGCvdata.csv"
 
 print("="*60)
 print("ECG DATA INPUT FORMATTER")
@@ -134,7 +134,7 @@ print("DEMONSTRATION")
 print("="*60)
 
 # Demo 1: From CSV
-X_test_formatted = format_from_csv_row(csv_path, row_index=1)
+X_test_formatted = format_from_csv_row(csv_path, row_index=908)
 print(f"\nFirst 5 features:")
 print(X_test_formatted.iloc[0, :5])
 
@@ -198,6 +198,7 @@ else:
         bar = '█' * int(prob * 50)
 
         print(f"  {class_name:20s} {prob:6.2%} {bar}")
+
 
 
 
