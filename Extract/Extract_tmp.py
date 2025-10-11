@@ -446,7 +446,29 @@ def save_features_to_csv(features, output_path):
     column_order = [
         'hbpermin', 'Pseg', 'PQseg', 'QRSseg', 'QRseg', 'QTseg', 'RSseg', 'STseg',
         'Tseg', 'PTseg', 'ECGseg', 'QRtoQSdur', 'RStoQSdur', 'RRmean', 'PPmean',
-        'PQdis', 'PonQdis', 'PRdis', 'PonRdis', 'PSdis', 'PonSdis', 'PTdis',
+        'PQdis', 'P_onQdis', 'PRdis', 'P_onRdis', 'PSdis', 'P_onSdis', 'PTdis',
+        'P_onTdis', 'PT_offdis', 'QRdis', 'QSdis', 'QTdis', 'QT_offdis', 'RSdis',
+        'RTdis', 'RT_offdis', 'STdis', 'ST_offdis', 'P_onT_offdis', 'P_onPQang',
+        'PQRang', 'QRSang', 'RSTang', 'STT_offang', 'RRTot', 'NNTot', 'SDRR',
+        'IBIM', 'IBISD', 'SDSD', 'RMSSD', 'QRSarea', 'QRSperi', 'PQslope',
+        'QRslope', 'RSslope', 'STslope', 'NN50', 'pNN50'
+    ]
+    
+    # Create DataFrame with single row
+    features_df = pd.DataFrame([features])
+    
+    # Add any missing columns with 0 values
+    for col in column_order:
+        if col not in features_df.columns:
+            features_df[col] = 0
+    
+    # Reorder columns to match the specified format
+    features_df = features_df[column_order]
+    
+    # Save to CSV with tab separator
+    features_df.to_csv(output_path, sep='\t', index=False)
+    print(f"\nFeatures saved to: {output_path}")
+    print(f"CSV format: Tab-separated with headers")', 'PTdis',
         'PonTdis', 'PToffdis', 'QRdis', 'QSdis', 'QTdis', 'QToffdis', 'RSdis',
         'RTdis', 'RToffdis', 'STdis', 'SToffdis', 'PonToffdis', 'PonPQang',
         'PQRang', 'QRSang', 'RSTang', 'STToffang', 'RRTot', 'NNTot', 'SDRR',
@@ -486,11 +508,9 @@ if __name__ == "__main__":
     print("=" * 70)
 
     max_name_length = max(len(name) for name in features.keys())
-    max_unit_length = max(len(get_feature_unit(name)) for name in features.keys())
 
     for feature_name, value in features.items():
-        unit = get_feature_unit(feature_name)
-        print(f"{feature_name:<{max_name_length}} : {value:>12.4f} {unit:>{max_unit_length}}")
+        print(f"{feature_name:<{max_name_length}} : {value:>12.4f}")
 
     # Save features to CSV
     save_features_to_csv(features, OUTPUT_CSV_PATH)
